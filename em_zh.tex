@@ -1,0 +1,187 @@
+\documentclass[UTF8]{ctexart}
+
+% ---------------- Packages ---------------------------
+\usepackage[usenames,dvipsnames]{color} % for adding color
+\usepackage{amsmath, amsthm, amssymb}   % for maths
+\usepackage[in,myheadings]{fullpage}    % for setting margins
+\usepackage{enumerate}  % for setting the enumerate bullet style
+\usepackage{fancyhdr}   % for setting page headers and footers
+\usepackage{listings}   % for typesetting code
+\usepackage{graphicx}   % for 'enhanced' graphics package
+\usepackage{framed}     % for frame borders
+\usepackage{float}      % for absolute figure placement (H)
+\usepackage{url}        % for typesetting hyperlinks
+\usepackage{bm}         % for bold greek letters
+
+%for font
+%\usepackage[T1]{fontenc}
+%\usepackage{mathptmx}
+% ---------------- Environments -----------------------
+\newenvironment{pitemize}{
+	\vspace{-3mm}
+	\begin{itemize}
+		\setlength{\itemsep}{1pt}
+		\setlength{\parskip}{0pt}
+		\setlength{\parsep}{0pt}
+	}{\end{itemize}}
+
+\newenvironment{penumerate}{
+	\begin{enumerate}
+		\vspace{-3mm}
+		\setlength{\itemsep}{1pt}
+		\setlength{\parskip}{-2pt}
+		\setlength{\parsep}{-5pt}
+	}{\end{enumerate}}
+
+\newenvironment{definition}[1][Definition]{
+	\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}]
+	}{\end{trivlist}}
+
+\newenvironment{example}[1][Example]{
+	\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}]
+	}{\end{trivlist}}
+
+\newenvironment{summary}[1][Summary]{
+	\begin{trivlist}
+		\item[\hskip \labelsep {\bfseries #1}]
+	}{\end{trivlist}}
+
+% ---------------- General Macros --------------------
+\newcommand{\ul}[1]{\underline{#1}}             % underline
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{#1}}}  % todo
+\newcommand{\qpart}[1]{\subsection{#1}\vspace{-3mm}}
+\newcommand{\qsection}[1]{\section{#1}\vspace{-3mm}}
+
+% ---------------- Probability Macros -----------------
+\renewcommand{\L}[1]{\mathcal{L}}    % likelihood
+\newcommand{\E}[1]{\mathbb{E}}     % expectation
+\newcommand{\Cov}[1]{\text{Cov}}   % covariance
+\newcommand{\Var}[1]{\text{Var}}   % variance
+\newcommand{\where}[1]{\text{ where }}
+\newcommand{\subto}[1]{\text{ subject to }}
+
+% ---------------- Linear Algebra Macros --------------
+\newcommand{\bs}{\boldsymbol}      % bold greek letters
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert} % norm
+
+% ---------------- Number Theory Macros ---------------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathcal{N}}
+
+% ---------------- Document Settings ------------------
+\setlength{\headheight}{20pt}
+\setlength{\textheight}{8in}
+\setlength{\footskip}{0.8in}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\parindent}{0pt}
+\pagestyle{fancy}
+
+% Headers
+\lhead{\\EM算法}
+\rhead{\\AHUwlkx}
+\begin{document}
+\section{极大似然估计ML}
+极大似然估计(ML)是用来估计统计模型的参数。
+\begin{pitemize}
+	\item x :观测数据；
+	\item $\theta$ :模型参数；
+    \item $p(x;\theta)$:作为参数$\theta$的函数，称作似然函数。
+\end{pitemize}
+极大似然估计是说既然数据已经存在，那么模型的参数要使得数据的概率$p(x;\theta)$最大:
+\begin{align}
+% \nonumber % Remove numbering (before each equation)
+  \hat{\theta}_{ML} = \arg\max\limits_{\theta} p(x;\theta) \tag{1}
+\end{align}
+
+\section{期望最大化EM}
+\textbf{EM}算法是用来求解含有隐变量的统计模型的一种方法。
+
+\begin{pitemize}
+	\item x :观测数据
+	\item $\theta$ :模型参数
+	\item z :隐变量
+\end{pitemize}
+\subsection{基于Jensen不等式的推导}
+
+\begin{align*}
+    \log p(x;\theta) &= \log\left[\sum_{z}p(x,z;\theta)\right] \\
+    &= \log\left[\sum_{z}q(z)\frac{p(x,z;\theta)}{q(z)}\right] \\
+    &\geq \sum_{z}\left[q(z)\log\frac{p(x,z;\theta)}{q(z)}\right] \tag{2}
+\end{align*}
+当$q(z)=p(z|x;\theta)$时，等式成立。
+
+EM算法有E-step和M-step。E-step是给定参数$\theta^{t}$，求隐变量的分布$q(z)=p(z|x;\theta^{t})$;M-step是将求出来的隐变量的分布$q(z)=p(z|x;\theta^{t})$代入公式(2)的右边得到$\log p(x;\theta)$的一个下界函数:
+\begin{align*}
+    g_{t}(\theta) &= \sum_{z}\left[p(z|x;\theta^{t})\log\frac{p(x,z;\theta)}{p(z|x;\theta^{t})}\right] \\
+    &= \sum_{z}\left[p(z|x;\theta^t)\log p(x, z;\theta)\right] - \sum_{z}\left[p(z|x;\theta^t)\log p(z|x;\theta^t)\right] \\
+    &= \mathcal{Q}(\theta|\theta^t) + \mathcal{H}(q) \\
+    &= \mathcal{Q}(\theta|\theta^t) + constant \tag{3}
+\end{align*}
+其中
+\begin{align}
+  \mathcal{Q}(\theta|\theta^t)=\sum_{z}\left[p(z|x;\theta^t)\log p(x, z;\theta)\right] \tag{4}
+\end{align}
+以及$\mathcal{H}(q)= \sum_{z}\left[p(z|x;\theta^t)\log p(z|x;\theta^t)\right]$。
+
+总结如下:
+
+\textbf{E-step}:给定$\theta^{t}$， 根据公式(2)求出隐变量的分布:
+\begin{align}
+    q^{t+1}(z)= p(z|x;\theta^t) \tag{5}
+\end{align}
+
+\textbf{M-step}:根据E-step的隐变量分布$q^{t+1}(z)= p(z|x;\theta^t)$,最大化$g_t(\theta)$来求解$\theta$,公式(3)说明了最大化$g_t(\theta)$只需要最大化公式(4)的$\mathcal{Q}(\theta|\theta^t)$:
+\begin{align}
+    \theta^{t+1} = \arg\max\limits_{\theta}\mathcal{Q}(\theta|\theta^t) \tag{6}
+\end{align}
+
+
+\subsection{基于变分推断框架的推导}
+\subsubsection{一个等式}
+
+从如下等式开始:
+\begin{align}
+  p(x;\theta) = \frac{p(x, z;\theta)}{p(z|x;\theta)} \tag{7}
+\end{align}
+对(7)式右边的分式的分子与分母同除以$q(z)$后取对数:
+\begin{align}
+  \log p(x;\theta) = \log\frac{p(x, z;\theta)}{q(z)} - \log\frac{p(z|x;\theta)}{q(z)} \tag{8}
+\end{align}
+在(8)式两边对$q(z)$求期望:
+\begin{align}
+  E_{q}\log p(x;\theta) = E_{q}\log\frac{p(x, z;\theta)}{q(z)} - E_{q}\log\frac{p(z|x;\theta)}{q(z)} \tag{9}
+\end{align}
+由于$E_{q}\log p(x;\theta) = \log p(x;\theta)$，得下式:
+\begin{align}
+  \textcolor[rgb]{0.00,0.50,0.75}{\log p(x;\theta) = \mathcal{F}(q,\theta)+\mathcal{KL}(q||p) \tag{10}}
+\end{align}
+其中
+\begin{align}
+    \mathcal{F}(q,\theta)= E_{q}\log\frac{p(x, z;\theta)}{q(z)} = \sum_{z}\left[q(z)\log\frac{p(x, z;\theta)}{q(z)}\right] \tag{11}
+\end{align}
+以及
+\begin{align}
+    \mathcal{KL}(q||p) = - E_{q}\log\frac{p(z|x;\theta)}{q(z)} = \sum_{z}\left[q(z)\log\frac{q(z)}{p(z|x;\theta)}\right] \tag{12}
+\end{align}
+
+\subsubsection{E-step和M-step}
+
+\textbf{E-step}:给定$\theta^{t}$， 我们寻找$q(z)$使得\textbf{证据下界}$\mathcal{F}(q,\theta)$最大:
+\begin{align*}
+    q^{t+1}(z) &= \arg\max\limits_{q}\mathcal{F}(q,\theta^t) \\
+    &=\arg\min\limits_{q}\mathcal{KL}(q||p(z|x;\theta^t)  \\
+    &= p(z|x;\theta^t) \tag{13}
+\end{align*}
+
+Remark:$\mathcal{F}(q,\theta)$又被称为\textbf{变分自由能}。
+
+\textbf{M-step}:我们寻找模型参数$\theta$使得$F(q^{t+1}(z),\theta)$最大:
+\begin{align*}
+    \theta^{t+1} &= \arg\max\limits_{\theta}\mathcal{F}(q^{t+1}(z),\theta) \\
+    &= \arg\max\limits_{\theta} E_{q^{t+1}(z)}\log p(x,z;\theta) \tag{14}
+\end{align*}
+
+Remark:$\mathcal{Q}(\theta|\theta^t) = E_{q^{t+1}(z)}\log p(x,z;\theta)$
+\end{document} 
